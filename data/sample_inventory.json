@@ -1,0 +1,173 @@
+{
+  "assets": [
+    {
+      "id": "internet",
+      "name": "Internet",
+      "type": "external",
+      "criticality": "high",
+      "public": true
+    },
+    {
+      "id": "lb-public-web",
+      "name": "Public Web Load Balancer",
+      "type": "load_balancer",
+      "criticality": "medium",
+      "public": true,
+      "routes_to": ["ec2-public-app", "ec2-api-worker"]
+    },
+    {
+      "id": "ec2-public-app",
+      "name": "Public App Server",
+      "type": "ec2",
+      "criticality": "medium",
+      "public": true,
+      "security_group": "sg-open-ssh",
+      "iam_role": "role-app-admin"
+    },
+    {
+      "id": "ec2-api-worker",
+      "name": "API Worker",
+      "type": "ec2",
+      "criticality": "medium",
+      "public": false,
+      "security_group": "sg-web",
+      "iam_role": "role-api-secrets"
+    },
+    {
+      "id": "ec2-batch",
+      "name": "Batch Processor",
+      "type": "ec2",
+      "criticality": "low",
+      "public": false,
+      "security_group": "sg-private",
+      "iam_role": "role-batch-s3"
+    },
+    {
+      "id": "ec2-admin-jumpbox",
+      "name": "Admin Jumpbox",
+      "type": "ec2",
+      "criticality": "high",
+      "public": true,
+      "security_group": "sg-open-rdp",
+      "iam_role": "role-readonly"
+    },
+    {
+      "id": "sg-open-ssh",
+      "name": "Open SSH Security Group",
+      "type": "security_group",
+      "criticality": "high",
+      "ingress": [{"port": 22, "cidr": "0.0.0.0/0"}]
+    },
+    {
+      "id": "sg-open-rdp",
+      "name": "Open RDP Security Group",
+      "type": "security_group",
+      "criticality": "high",
+      "ingress": [{"port": 3389, "cidr": "0.0.0.0/0"}]
+    },
+    {
+      "id": "sg-web",
+      "name": "Web Tier Security Group",
+      "type": "security_group",
+      "criticality": "medium",
+      "ingress": [{"port": 443, "cidr": "10.0.0.0/16"}]
+    },
+    {
+      "id": "sg-private",
+      "name": "Private Worker Security Group",
+      "type": "security_group",
+      "criticality": "low",
+      "ingress": [{"port": 443, "cidr": "10.0.0.0/16"}]
+    },
+    {
+      "id": "role-app-admin",
+      "name": "Application Admin Role",
+      "type": "iam_role",
+      "criticality": "critical",
+      "permissions": ["*", "secretsmanager:GetSecretValue", "iam:PassRole", "s3:*"],
+      "can_read_secrets": ["secret-prod-db"],
+      "can_access_buckets": ["s3-customer-data", "s3-audit-logs"]
+    },
+    {
+      "id": "role-api-secrets",
+      "name": "API Secrets Reader Role",
+      "type": "iam_role",
+      "criticality": "high",
+      "permissions": ["secretsmanager:GetSecretValue"],
+      "can_read_secrets": ["secret-payment-api"],
+      "can_access_buckets": ["s3-app-logs"]
+    },
+    {
+      "id": "role-batch-s3",
+      "name": "Batch S3 Role",
+      "type": "iam_role",
+      "criticality": "medium",
+      "permissions": ["s3:*"],
+      "can_read_secrets": [],
+      "can_access_buckets": ["s3-customer-data"]
+    },
+    {
+      "id": "role-readonly",
+      "name": "Read Only Admin Role",
+      "type": "iam_role",
+      "criticality": "low",
+      "permissions": ["ec2:DescribeInstances"],
+      "can_read_secrets": [],
+      "can_access_buckets": []
+    },
+    {
+      "id": "secret-prod-db",
+      "name": "Production DB Secret",
+      "type": "secret",
+      "criticality": "critical",
+      "unlocks": "db-prod"
+    },
+    {
+      "id": "secret-payment-api",
+      "name": "Payment API Secret",
+      "type": "secret",
+      "criticality": "high",
+      "unlocks": "db-payments"
+    },
+    {
+      "id": "db-prod",
+      "name": "Production Customer Database",
+      "type": "database",
+      "criticality": "critical"
+    },
+    {
+      "id": "db-payments",
+      "name": "Payment Database",
+      "type": "database",
+      "criticality": "critical"
+    },
+    {
+      "id": "s3-customer-data",
+      "name": "Customer Data Bucket",
+      "type": "s3_bucket",
+      "criticality": "critical",
+      "public": true,
+      "encrypted": false,
+      "sensitive": true
+    },
+    {
+      "id": "s3-audit-logs",
+      "name": "Audit Logs Bucket",
+      "type": "s3_bucket",
+      "criticality": "high",
+      "public": false,
+      "encrypted": false,
+      "sensitive": true
+    },
+    {
+      "id": "s3-app-logs",
+      "name": "Application Logs Bucket",
+      "type": "s3_bucket",
+      "criticality": "medium",
+      "public": false,
+      "encrypted": true,
+      "sensitive": false
+    }
+  ]
+}
+

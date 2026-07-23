@@ -1,0 +1,2 @@
+"""CloudGuardGraph prototype package."""
+

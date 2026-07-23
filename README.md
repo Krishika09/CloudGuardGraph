@@ -1,98 +1,363 @@
 # CloudGuardGraph
 
-CloudGuardGraph is a cloud security posture management (CSPM) dashboard that models a cloud
-environment as a graph of resources, surfaces misconfigurations, and traces them into concrete
-**attack paths** — e.g. `Internet → EC2 → IAM Role → Secret → Production DB` — so teams can see
-not just *what* is misconfigured but *how* it can be chained into a breach, and what to fix first.
+CloudGuardGraph is a cloud security correlation tool that converts isolated IaC and IAM findings into realistic attack paths, explains why those paths matter, and simulates how remediation reduces graph-based risk.
 
-This repo currently ships a **v1 mock backend**: a FastAPI service that serves the full API
-contract (workspaces, scans, findings, attack graph, risk scoring, recommendations, simulation,
-reports, users, audit logs) from static in-memory fixture data. It stands in for the real
-`Parser → Detector → Graph Builder → Attack Path Engine → Risk Engine → Explainability → AI
-Remediation → Simulation` pipeline, using the same request/response contract, so the frontend
-won't need to change when the real pipeline is wired in.
+CloudGuardGraph differs from traditional misconfiguration scanners by correlating isolated findings into realistic attack paths and simulating how remediations reduce graph-based risk.
 
-## Features
+## Current Status
 
-- **Overview** — workspace risk summary and risk trend over time.
-- **Cloud Inventory** — discovered cloud resources and their worst severity.
-- **Findings** — misconfigurations/vulnerabilities, with suppression support.
-- **Attack Graph** — interactive graph view of resources and relationships (built on
-  [`@xyflow/react`](https://reactflow.dev/)), highlighting edges on critical attack paths.
-- **Attack Paths** — ranked exploitation chains from an entry point to a target asset, filterable
-  by status/target.
-- **Risk Analysis** — composite risk scoring for a scan.
-- **Recommendations** — prioritized remediations ranked by estimated risk reduction, with status
-  tracking.
-- **Simulator** — "what-if" simulation of applying a set of recommendations.
-- **Reports** — generate and download report exports (executive summary, etc.).
-- **Scan History** — past scans and triggering new scans, with live progress via Server-Sent
-  Events.
-- **User Management / Audit Logs / Settings** — workspace user roles, an audit trail of actions,
-  and workspace settings.
+This repository is the merged course-project version:
 
-## Tech stack
+- The original Streamlit dashboard has been removed.
+- The active dashboard is a React/Vite frontend in `frontend/`.
+- A FastAPI backend in `backend/` serves the API needed by the dashboard.
+- The attack graph, risk scoring, explanation, simulation, and report layers are custom-built in `src/`.
+- Sample Terraform, synthetic inventory, and Checkov JSON data feed the Phase 1 analysis pipeline.
+- `python -m src.pipeline` generates `outputs/analysis.json`, which is the dashboard's source of truth.
+- Terraform has been expanded into a realistic multi-file vulnerable AWS lab under `data/terraform/`.
+- Checkov has been run against the Terraform lab and currently produces real failed checks in `outputs/checkov_results.json`.
+- Backend and frontend validation currently pass.
 
-- **Backend:** Python, FastAPI, Uvicorn — in-memory fixture data (`backend/app/seed.py`,
-  `backend/app/store.py`), REST + SSE API (`backend/app/routers/api.py`).
-- **Frontend:** React 19 + TypeScript, Vite, Tailwind CSS, TanStack Query, Zustand, React Router,
-  `@xyflow/react` (graph view), ECharts (charts), AG Grid (tables), shadcn/ui components.
-
-## Prerequisites
-
-- Python 3.11+ (a `.venv` is already set up under `backend/.venv`)
-- Node.js 18+ and npm
-
-## Running the backend
+Validated commands:
 
 ```bash
-cd backend
-# create/activate a virtual environment if you don't already have one
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate    # macOS/Linux
-
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8010
+python -m src.pipeline
+python -m pytest -q
+npm run build
 ```
 
-The API is now available at `http://localhost:8010/api`, with a health check at
-`http://localhost:8010/api/health`.
+Current known non-blocking issue:
 
-## Running the frontend
+- The frontend build reports large bundle chunks. This does not stop the demo.
+
+## Project Scope
+
+This project uses existing tools for:
+
+- Checkov for Terraform/IaC misconfiguration scanning
+- NetworkX for graph and path analysis
+- Jinja2 for HTML report generation
+- React/Vite for the presentation dashboard
+- FastAPI for connecting the dashboard to the backend logic
+
+Custom-built project layers:
+
+- Synthetic cloud inventory
+- Checkov result adapter
+- Simple IAM detector
+- Cloud asset graph
+- Attack path engine
+- Risk scoring
+- Explainability
+- Fix simulator
+- Dashboard API integration
+- HTML report
+
+## Architecture
+
+```text
+Terraform IaC
+    |
+    v
+Checkov JSON Output
+    |
+    v
+Checkov Adapter ---- Synthetic Inventory ---- IAM Detector
+        |                    |                     |
+        +--------------------+---------------------+
+                             |
+                             v
+                     Normalized Findings
+                             |
+                             v
+                    NetworkX Asset Graph
+                             |
+                             v
+                    Attack Path Engine
+                             |
+                             v
+              Risk Engine + Explainability
+                             |
+              +--------------+--------------+
+              |                             |
+              v                             v
+       Remediation Simulator          HTML Report
+              |
+              v
+       React/Vite Dashboard
+```
+
+## Project Structure
+
+```text
+backend/       FastAPI API used by the React dashboard
+frontend/      React/Vite dashboard
+data/          Terraform vulnerable AWS lab and synthetic cloud inventory
+outputs/       Checkov JSON sample/output files
+src/           CloudGuardGraph backend intelligence modules
+reports/       Generated HTML report output
+tests/         Core and backend contract tests
+```
+
+Current Terraform lab files:
+
+```text
+data/terraform/
+  main.tf
+  variables.tf
+  network.tf
+  security_groups.tf
+  iam.tf
+  ec2.tf
+  s3.tf
+  rds.tf
+  secrets.tf
+  load_balancer.tf
+  outputs.tf
+```
+
+## How To Run
+
+Generate or refresh the analysis first:
 
 ```bash
-cd frontend
-npm install
+cd CloudGuardGraph
+source .venv/bin/activate
+python -m src.pipeline
+```
+
+To regenerate Checkov results and then run the pipeline in one safe flow:
+
+```bash
+python -m src.pipeline --run-checkov
+```
+
+Run the backend in the first terminal:
+
+```bash
+cd CloudGuardGraph
+source .venv/bin/activate
+python -m uvicorn backend.main:app --reload --port 8010
+```
+
+Run the frontend in a second terminal:
+
+```bash
+cd CloudGuardGraph/frontend
 npm run dev
 ```
 
-The app runs at `http://localhost:5173`. In development, Vite proxies all `/api/*` requests to
-the backend at `http://localhost:8010` (see `frontend/vite.config.ts`), so start the backend
-first.
+Open the dashboard:
 
-### Other frontend scripts
+```text
+http://localhost:5173
+```
+
+The frontend proxies `/api/*` requests to the backend at:
+
+```text
+http://localhost:8010
+```
+
+To stop the app, press `Ctrl + C` in both terminals.
+
+## Pipeline Output
+
+The main Phase 1 deliverable is:
+
+```text
+outputs/analysis.json
+```
+
+It contains:
+
+- Metadata
+- Summary metrics
+- Assets
+- Normalized findings
+- Serialized graph nodes and edges
+- Scored attack paths
+- Explanations
+- Recommendations
+- Risky resource summary
+
+The FastAPI backend reads this file and adapts it to the React dashboard contract.
+
+## Fresh Setup
+
+If dependencies are missing, install them once.
+
+Python backend:
 
 ```bash
-npm run build     # type-check (tsc -b) and production build
-npm run preview   # preview the production build
-npm run lint       # lint with oxlint
+cd CloudGuardGraph
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-## Project structure
+Frontend:
 
+```bash
+cd CloudGuardGraph/frontend
+npm install
 ```
-backend/
-  main.py                 # FastAPI app entrypoint
-  app/
-    routers/api.py         # all REST + SSE endpoints
-    store.py                # in-memory data store / mutation logic
-    seed.py                 # fixture/seed data
-frontend/
-  src/
-    pages/                 # one file per route (Overview, Findings, AttackGraph, ...)
-    components/            # shared/layout/UI components
-    lib/api.ts              # typed fetch client for the backend API
-    store/                  # Zustand stores
-    types/domain.ts          # shared domain types
+
+## Testing
+
+Backend/core tests:
+
+```bash
+cd CloudGuardGraph
+source .venv/bin/activate
+python -m pytest -q
 ```
+
+Frontend build:
+
+```bash
+cd CloudGuardGraph/frontend
+npm run build
+```
+
+Frontend lint:
+
+```bash
+cd CloudGuardGraph/frontend
+npm run lint
+```
+
+## Checkov Data
+
+The current demo uses:
+
+```text
+outputs/checkov_results.json
+```
+
+A backup sample is also included:
+
+```text
+outputs/checkov_results_sample.json
+```
+
+To regenerate Checkov output when Checkov is available:
+
+```bash
+python -m src.checkov_runner
+```
+
+The runner writes Checkov output to a temporary file first, validates that it is real JSON with failed checks, and then atomically replaces `outputs/checkov_results.json`.
+
+Manual Checkov command, if needed:
+
+```bash
+python -m checkov.main -d data/terraform --framework terraform --output json --quiet > outputs/checkov_results.json
+```
+
+Checkov returns a non-zero process status when failed checks are found. That is expected for this intentionally vulnerable lab.
+
+## Core Modules
+
+- `src/loader.py` loads inventory and scanner output.
+- `src/checkov_adapter.py` normalizes failed Checkov checks.
+- `src/iam_detector.py` detects dangerous IAM permissions.
+- `src/detectors.py` merges and deduplicates findings.
+- `src/graph_builder.py` builds the cloud asset graph.
+- `src/attack_paths.py` finds paths from Internet to sensitive assets.
+- `src/risk_engine.py` scores attack paths.
+- `src/explainability.py` creates plain-English explanations.
+- `src/simulator.py` simulates remediation impact.
+- `src/report.py` generates the HTML report.
+
+## Example Attack Path
+
+```text
+Internet -> ec2-public-app -> role-app-admin -> secret-prod-db -> db-prod
+```
+
+Example interpretation:
+
+```text
+Internet can reach a public EC2 instance. That instance assumes an over-permissive IAM role. The role can read a production database secret, and that secret unlocks a critical database.
+```
+
+## Risk Scoring
+
+Attack path score is calculated using simple explainable rules:
+
+- `+30` path starts from Internet
+- `+25` path contains wildcard/admin IAM
+- `+20` target is critical
+- `+15` path contains a secret
+- `+10` open security group finding exists
+- `+10` public S3 without encryption
+
+Scores are clamped to `100`.
+
+Severity mapping:
+
+- `0-39`: Low
+- `40-59`: Medium
+- `60-79`: High
+- `80-100`: Critical
+
+## Remediation Simulator
+
+The simulator currently supports four remediation types:
+
+- `make_s3_private`
+- `enable_s3_encryption`
+- `restrict_security_group`
+- `remove_secret_read_permission`
+
+It rebuilds the graph after the selected fix and compares:
+
+- Before risk
+- After risk
+- Risk reduction percentage
+- Removed attack paths
+- Remaining attack paths
+
+## Report
+
+The HTML report is generated through `src/report.py` and can be served through the backend report endpoint used by the dashboard.
+
+Report output location:
+
+```text
+reports/report.html
+```
+
+## What Is Complete
+
+- React frontend merged into the course project
+- Streamlit dashboard removed
+- FastAPI API adapter added
+- Phase 1 real pipeline added
+- `outputs/analysis.json` generated from inventory, Checkov output, detectors, graph analysis, risk scoring, and recommendations
+- Phase 2 realistic vulnerable Terraform lab added
+- Real Checkov failed checks generated from `data/terraform/`
+- Atomic Checkov runner added to prevent empty or half-written scan output
+- Checkov adapter implemented
+- IAM detector implemented
+- NetworkX graph builder implemented
+- Attack path engine implemented
+- Risk scoring implemented
+- Explainability implemented
+- Simulator implemented
+- HTML report generator implemented
+- Core/backend tests added
+
+## What To Do Next
+
+- Expand inventory relationships so the graph represents more realistic AWS attack scenarios.
+- Remove or hide any remaining frontend screens that distract from the final-year scope.
+- Add dashboard screenshots for README and presentation.
+- Polish the generated HTML report visually.
+- Run fresh Checkov output before final submission if required.
+- Prepare the final project write-up around graph-based attack-path correlation and remediation simulation.
+
+## Project Note
+
+This project uses Checkov as an external IaC scanner. The attack graph, risk scoring, explanation, simulation, API adapter, and dashboard integration layers are custom-built.

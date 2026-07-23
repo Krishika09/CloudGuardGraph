@@ -1,21 +1,22 @@
-"""
-CloudGuardGraph — v1 mock backend.
+"""CloudGuardGraph API serving the React dashboard."""
 
-Serves the API map from the UX audit's Phase 10 against static, in-memory
-fixture data (see app/seed.py) styled after the project doc's canonical
-scenario. This stands in for the real Parser -> Detector -> Graph Builder ->
-Attack Path Engine -> Risk Engine -> Explainability -> AI Remediation ->
-Simulation pipeline: same request/response contract, so the frontend never
-needs to change when the real pipeline is wired in later.
+from __future__ import annotations
 
-Run with:  uvicorn main:app --reload --port 8010
-"""
+import sys
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.api import router
 
-app = FastAPI(title="CloudGuardGraph API", version="0.1.0")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from backend.app.routers.api import router  # noqa: E402
+
+
+app = FastAPI(title="CloudGuardGraph API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,5 +29,5 @@ app.include_router(router)
 
 
 @app.get("/api/health")
-def health():
+def health() -> dict:
     return {"status": "ok"}

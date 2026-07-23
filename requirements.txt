@@ -1,0 +1,6 @@
+checkov
+networkx
+jinja2
+pytest
+fastapi
+uvicorn[standard]
