@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+    --font-mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-critical: var(--severity-critical);
+    --color-high: var(--severity-high);
+    --color-medium: var(--severity-medium);
+    --color-low: var(--severity-low);
+    --color-success: var(--severity-success);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* CloudGuardGraph — dark command-center theme (default & only theme for v1)
+   Palette is deliberately single-family: one accent (cyan), one positive
+   signal (green), everything else is grayscale-navy. Severity is expressed
+   as INTENSITY of the accent (bright -> dim), not a red/orange/yellow/green
+   traffic light — matches the reference UI's monochrome console look and
+   avoids the alarm-color-per-badge pattern common to generated dashboards. */
+:root {
+    --background: #070b16;
+    --foreground: #e6ecf7;
+    --card: #0d1526;
+    --card-foreground: #e6ecf7;
+    --popover: #0c1424;
+    --popover-foreground: #e6ecf7;
+    --primary: #22d3ee;
+    --primary-foreground: #04141a;
+    --secondary: #101b30;
+    --secondary-foreground: #c7d2e6;
+    --muted: #101b30;
+    --muted-foreground: #7c8aac;
+    --accent: #16233c;
+    --accent-foreground: #e6ecf7;
+    --destructive: #9c8cf5;
+    --border: #1a2740;
+    --input: #16223a;
+    --ring: #22d3ee;
+    --chart-1: #22d3ee;
+    --chart-2: #6d8cff;
+    --chart-3: #3fbf8f;
+    --chart-4: #9c8cf5;
+    --chart-5: #4f6a8f;
+    --radius: 0.5rem;
+    --sidebar: #060a14;
+    --sidebar-foreground: #c7d2e6;
+    --sidebar-primary: #22d3ee;
+    --sidebar-primary-foreground: #04141a;
+    --sidebar-accent: #101b30;
+    --sidebar-accent-foreground: #e6ecf7;
+    --sidebar-border: #16223a;
+    --sidebar-ring: #22d3ee;
+
+    --severity-critical: #7fe6f7;
+    --severity-high: #22d3ee;
+    --severity-medium: #4f7d94;
+    --severity-low: #5b6478;
+    --severity-success: #3fbf8f;
+}
+
+/* Same dark palette is applied unconditionally: this product is a security
+   operations console, not a marketing site — see Phase 7 of the UX audit. */
+.dark {
+    --background: #070b16;
+    --foreground: #e6ecf7;
+    --card: #0d1526;
+    --card-foreground: #e6ecf7;
+    --popover: #0c1424;
+    --popover-foreground: #e6ecf7;
+    --primary: #22d3ee;
+    --primary-foreground: #04141a;
+    --secondary: #101b30;
+    --secondary-foreground: #c7d2e6;
+    --muted: #101b30;
+    --muted-foreground: #7c8aac;
+    --accent: #16233c;
+    --accent-foreground: #e6ecf7;
+    --destructive: #9c8cf5;
+    --border: #1a2740;
+    --input: #16223a;
+    --ring: #22d3ee;
+    --sidebar: #060a14;
+    --sidebar-foreground: #c7d2e6;
+    --sidebar-primary: #22d3ee;
+    --sidebar-primary-foreground: #04141a;
+    --sidebar-accent: #101b30;
+    --sidebar-accent-foreground: #e6ecf7;
+    --sidebar-border: #16223a;
+    --sidebar-ring: #22d3ee;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Subtle HUD grid backdrop, referenced from the NOC-style inspiration
+     without the literal glow/gradient overload — used sparingly, only
+     behind hero/gauge surfaces. */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .glow-ring {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--primary) 35%, transparent),
+                0 0 24px -6px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 18px color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.ag-theme-quartz-dark {
+  --ag-background-color: var(--card);
+  --ag-header-background-color: var(--secondary);
+  --ag-odd-row-background-color: color-mix(in oklab, var(--card) 96%, white 4%);
+  --ag-border-color: var(--border);
+  --ag-foreground-color: var(--foreground);
+  --ag-header-foreground-color: var(--muted-foreground);
+  --ag-row-hover-color: var(--accent);
+  --ag-font-family: var(--font-sans);
+  --ag-font-size: 13px;
+}
